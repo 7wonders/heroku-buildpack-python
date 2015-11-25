@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+# This script serves as the GEOS build step of the
+# [**GeoDjango Buildpack**](https://github.com/dulaccc/heroku-buildpack-geodjango)
+# compiler.
+#
+# A [buildpack](http://devcenter.heroku.com/articles/buildpacks) is an
+# adapter between a Python application and Heroku's runtime.
+#
+# This script is invoked by [`bin/compile`](/).
+
+# Syntax sugar.
+source $BIN_DIR/utils
+source $BIN_DIR/helpers
+
+# Retrieve version
+GEOS_VERSION=$(manifest_version "geos")
+
+# Display some information
+echo "Using geos version: ${GEOS_VERSION}" | indent
+
+if [ ! -d $CACHE_DIR/geos ]; then
+  # Download and extract geos into target vendor directory.
+  echo "Fetching, caching and installing geos" | indent
+  download_package "geos" "${GEOS_VERSION}" "${CACHE_DIR}/geos"
+fi
+
+mkdir -p $BUILD_DIR/.geodjango
+cp -R $CACHE_DIR/geos $BUILD_DIR/.geodjango
+echo "Installed" | indent
+
+# make the lib path accessible
+export GEOS_LIBRARY_DIR=$BUILD_DIR/.geodjango/geos
+export GEOS_LIBRARY_PATH=$GEOS_LIBRARY_DIR/lib/libgeos_c.so
+echo "GEOS installed and accessible with env variable 'GEOS_LIBRARY_PATH'" | indent
