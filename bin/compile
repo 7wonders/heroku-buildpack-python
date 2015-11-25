@@ -16,7 +16,7 @@ export PATH=:/usr/local/bin:$PATH
 BIN_DIR=$(cd $(dirname $0); pwd) # absolute path
 ROOT_DIR=$(dirname $BIN_DIR)
 BUILD_DIR=$1
-CACHE_DIR=$2
+CACHE_DIR="${2}/${STACK:-$DEFAULT_PYTHON_STACK}"
 ENV_DIR=$3
 
 # Static configurations for virtualenv caches.
@@ -174,6 +174,13 @@ source $BIN_DIR/steps/mercurial
 # Pylibmc support.
 source $BIN_DIR/steps/pylibmc
 
+# GeoDjango support. (GEOS, Proj.4, GDAL)
+bpwatch start geodjango_install
+  source $BIN_DIR/steps/geodjango_geos
+  source $BIN_DIR/steps/geodjango_proj4
+  source $BIN_DIR/steps/geodjango_gdal
+bpwatch stop geodjango_install
+
 # Libffi support.
 source $BIN_DIR/steps/cryptography
 
@@ -194,8 +201,12 @@ sub-env $BIN_DIR/steps/collectstatic
 set-env PATH '$HOME/.heroku/python/bin:$PATH'
 set-env PYTHONUNBUFFERED true
 set-env PYTHONHOME /app/.heroku/python
-set-env LIBRARY_PATH '/app/.heroku/vendor/lib:/app/.heroku/python/lib:$LIBRARY_PATH'
-set-env LD_LIBRARY_PATH '/app/.heroku/vendor/lib:/app/.heroku/python/lib:$LD_LIBRARY_PATH'
+set-env GEOS_LIBRARY_PATH $GEOS_LIBRARY_PATH
+set-env PROJ4_LIBRARY_PATH $PROJ4_LIBRARY_PATH
+set-env GDAL_LIBRARY_PATH $GDAL_LIBRARY_PATH
+set-env GDAL_DATA_PATH $GDAL_DATA_PATH
+set-env LIBRARY_PATH /app/.heroku/vendor/lib:/app/.heroku/python/lib
+set-env LD_LIBRARY_PATH "/app/.heroku/vendor/lib:/app/.heroku/python/lib:$GEOS_LIBRARY_DIR/lib:$PROJ4_LIBRARY_DIR/lib:$GDAL_LIBRARY_DIR/lib"':$LD_LIBRARY_PATH'
 set-default-env LANG en_US.UTF-8
 set-default-env PYTHONHASHSEED random
 set-default-env PYTHONPATH /app/
